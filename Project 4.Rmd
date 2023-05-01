@@ -44,6 +44,7 @@ datatable(ham_or_spam)
 ```
 
 # Create a Corpus and Document Term Matrix
+To clean the corpus, we need to make all text into lowercase, remove numbers, remove stopwords, remove punctucation, and remove whitespaces.
 
 ```{r}
 
@@ -62,7 +63,7 @@ DTM <- DocumentTermMatrix(spam_ham_corpus)
 # Remove sparse terms with threshold of 90%
 DTM <- removeSparseTerms(DTM, 0.90)
 spam_ham <- as.data.frame(as.matrix(DTM))
-
+spam_ham$label <- kaggle$label
 ```
 
 # Training and Testing
@@ -73,7 +74,7 @@ spam_ham <- as.data.frame(as.matrix(DTM))
 library(caTools)
 set.seed(1111)
 
-sample <- sample.split(kaggle$text, SplitRatio = 0.7)
+sample <- sample.split(kaggle$text, SplitRatio = 0.8)
 train  <- subset(kaggle, sample == TRUE)
 test   <- subset(kaggle, sample == FALSE)
 ``` 
@@ -90,6 +91,31 @@ test_count <- test%>%
   count(label)
 datatable(test_count)
 ```
+## Model and Prediction
+
+```{r}
+#install.packages("naivebayes")
+#install.packages("e1071")
+
+library(naivebayes)
+library(e1071)
+model <- naive_bayes(label~., train)
+
+prediction <- predict(model, test)
+
+```
+# Model Accuracy
+```{r}
+#install.packages("caret")
+library(caret)
+confusion_matrix <- table(test$label, prediction)
+
+confusionMatrix(confusion_matrix)
+
+```
+# Conclusion
+
+The model above has a 75.17% accuracy rate, using Naive Bayes to train and predict. 
 
 # Source
 http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
